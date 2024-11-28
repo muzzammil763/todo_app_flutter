@@ -146,13 +146,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
 
     setState(() {
-      todos.add(Todo(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: _todoController.text,
-        category: category,
-        priority: selectedPriority,
-        timestamp: DateTime.now(),
-      ));
+      todos.insert(
+          0,
+          Todo(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            text: _todoController.text,
+            category: category,
+            priority: selectedPriority,
+            timestamp: DateTime.now(),
+          ));
       _todoController.clear();
       _customCategoryController.clear();
       showCustomCategory = false;
@@ -535,8 +537,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildTodoList() {
     final sortedTodos = List<Todo>.from(todos)
       ..sort((a, b) {
+        final aTime = a.lastEdited ?? a.timestamp;
+        final bTime = b.lastEdited ?? b.timestamp;
         final priorityOrder = {'urgent': 0, 'high': 1, 'medium': 2, 'low': 3};
-        return priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!);
+        final priorityCompare =
+            priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!);
+        if (priorityCompare == 0) {
+          return bTime.compareTo(aTime);
+        }
+
+        return priorityCompare;
       });
 
     return ListView.builder(
