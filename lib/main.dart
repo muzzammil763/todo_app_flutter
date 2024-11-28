@@ -26,7 +26,7 @@ class Todo {
   String priority;
   bool completed;
   final DateTime timestamp;
-  DateTime? lastEdited; // Add this field
+  DateTime? lastEdited;
 
   Todo({
     required this.id,
@@ -61,7 +61,6 @@ class Todo {
       );
 
   String formatDateTime(DateTime dateTime) {
-    // String period = dateTime.hour >= 12 ? 'PM' : 'AM';
     int hour12 = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
     hour12 = hour12 == 0 ? 12 : hour12;
 
@@ -192,12 +191,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 children: [
                   const Row(
                     children: [
-                      Text(
-                        '/**',
-                        style: TextStyle(
-                          color: Color(0xFF858585),
-                          fontSize: 24,
-                          fontFamily: 'consolas',
+                      Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Text(
+                          '/**',
+                          style: TextStyle(
+                            color: Color(0xFF858585),
+                            fontSize: 24,
+                            fontFamily: 'consolas',
+                          ),
                         ),
                       ),
                       SizedBox(width: 8),
@@ -222,6 +224,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   const SizedBox(height: 16),
                   Row(
                     children: [
+                      const SizedBox(width: 4),
                       Expanded(
                         child: TextField(
                           cursorColor: const Color(0xFF569CD6),
@@ -329,10 +332,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
-                                  vertical: 12,
+                                  vertical: 13,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 elevation: 0,
                               ).copyWith(
@@ -566,7 +569,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: Card(
               shadowColor: _getPriorityColor(todo.priority),
               elevation: 2,
-              margin: const EdgeInsets.only(right: 12, left: 4, bottom: 8),
+              margin: const EdgeInsets.only(right: 5, bottom: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),
                 side: BorderSide(
@@ -798,11 +801,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void _editTodo(Todo todo) {
     final TextEditingController textController =
         TextEditingController(text: todo.text);
-    // Use StatefulBuilder to manage dialog state
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        // Wrap AlertDialog with StatefulBuilder
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: const Color(0xFF252526),
           title: const Text(
@@ -850,24 +851,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Row(
                 children: [
                   StyledDropdown(
-                    value: todo.category, // Use todo.category directly
+                    value: todo.category,
                     items: [...categories],
                     onChanged: (value) {
                       setDialogState(() {
-                        // Use setDialogState instead of setState
-                        todo.category = value!; // Update directly
+                        todo.category = value!;
                       });
                     },
                     hintText: 'Category',
                   ),
                   const SizedBox(width: 8),
                   StyledDropdown(
-                    value: todo.priority, // Use todo.priority directly
+                    value: todo.priority,
                     items: const ['low', 'medium', 'high', 'urgent'],
                     onChanged: (value) {
                       setDialogState(() {
-                        // Use setDialogState instead of setState
-                        todo.priority = value!; // Update directly
+                        todo.priority = value!;
                       });
                     },
                     hintText: 'Priority',
