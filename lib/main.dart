@@ -798,31 +798,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void _editTodo(Todo todo) {
     final TextEditingController textController =
         TextEditingController(text: todo.text);
-    String editCategory = todo.category;
-    String editPriority = todo.priority;
-
+    // Use StatefulBuilder to manage dialog state
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF252526),
-        title: const Text(
-          'Edit Todo',
-          style: TextStyle(
-            fontFamily: 'consolas',
-            color: Colors.white,
+      builder: (context) => StatefulBuilder(
+        // Wrap AlertDialog with StatefulBuilder
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF252526),
+          title: const Text(
+            'Edit Todo',
+            style: TextStyle(
+              fontFamily: 'consolas',
+              color: Colors.white,
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'consolas',
-              ),
-              cursorColor: const Color(0xFF569CD6),
-              controller: textController,
-              decoration: InputDecoration(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'consolas',
+                ),
+                cursorColor: const Color(0xFF569CD6),
+                controller: textController,
+                decoration: InputDecoration(
                   labelText: 'Task',
                   labelStyle: const TextStyle(
                     fontFamily: "consolas",
@@ -843,65 +843,73 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(4),
                     borderSide: const BorderSide(color: Color(0xFF569CD6)),
-                  )),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                StyledDropdown(
-                  value: editCategory,
-                  items: [...categories],
-                  onChanged: (value) => setState(() => editCategory = value!),
-                  hintText: 'Category',
-                ),
-                const SizedBox(width: 8),
-                StyledDropdown(
-                  value: editPriority,
-                  items: const ['low', 'medium', 'high', 'urgent'],
-                  onChanged: (value) => setState(
-                    () => editPriority = value!,
                   ),
-                  hintText: 'Priority',
                 ),
-              ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  StyledDropdown(
+                    value: todo.category, // Use todo.category directly
+                    items: [...categories],
+                    onChanged: (value) {
+                      setDialogState(() {
+                        // Use setDialogState instead of setState
+                        todo.category = value!; // Update directly
+                      });
+                    },
+                    hintText: 'Category',
+                  ),
+                  const SizedBox(width: 8),
+                  StyledDropdown(
+                    value: todo.priority, // Use todo.priority directly
+                    items: const ['low', 'medium', 'high', 'urgent'],
+                    onChanged: (value) {
+                      setDialogState(() {
+                        // Use setDialogState instead of setState
+                        todo.priority = value!; // Update directly
+                      });
+                    },
+                    hintText: 'Priority',
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: const Color(0xFF569CD6).withOpacity(0.8),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  todo.text = textController.text;
+                  todo.lastEdited = DateTime.now();
+                });
+                _saveTodos();
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF569CD6).withOpacity(0.8),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: const Text('Save'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: const Color(0xFF569CD6).withOpacity(0.8),
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                todo.text = textController.text;
-                todo.category = editCategory;
-                todo.priority = editPriority;
-                todo.lastEdited = DateTime.now();
-              });
-              _saveTodos();
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF569CD6).withOpacity(0.8),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }
