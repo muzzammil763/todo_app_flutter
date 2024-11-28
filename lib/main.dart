@@ -554,33 +554,49 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               0,
             )..translate(5),
             child: Card(
+              shadowColor: _getPriorityColor(todo.priority),
+              elevation: 2,
               margin: const EdgeInsets.only(right: 12, left: 4, bottom: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),
                 side: BorderSide(
-                  color: _getPriorityColor(todo.priority),
+                  color: todo.completed
+                      ? Colors.green
+                      : _getPriorityColor(todo.priority),
                   width: 1,
                 ),
               ),
               child: ListTile(
                 tileColor: const Color(0xFF1E1E1E),
                 focusColor: Colors.transparent,
-                title: Text(
-                  todo.text,
-                  style: TextStyle(
-                    decoration:
-                        todo.completed ? TextDecoration.lineThrough : null,
-                    color: todo.completed
-                        ? const Color(0xFF858585)
-                        : const Color(0xFFD4D4D4),
-                    fontFamily: 'consolas',
+                title: Padding(
+                  padding: const EdgeInsets.only(top: 12, bottom: 2),
+                  child: Text(
+                    todo.text,
+                    style: TextStyle(
+                      decorationThickness: 2.5,
+                      decoration:
+                          todo.completed ? TextDecoration.lineThrough : null,
+                      decorationColor: todo.completed ? Colors.green : null,
+                      color: todo.completed
+                          ? const Color(0xFF858585)
+                          : const Color(0xFFD4D4D4),
+                      fontFamily: 'consolas',
+                    ),
                   ),
                 ),
-                subtitle: Text(
-                  todo.getFormattedTimestamp(),
-                  style: const TextStyle(
-                    color: Color(0xFF858585),
-                    fontFamily: 'consolas',
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(bottom: 12, top: 2),
+                  child: Text(
+                    todo.getFormattedTimestamp(),
+                    style: TextStyle(
+                      decorationThickness: 2.5,
+                      decoration:
+                          todo.completed ? TextDecoration.lineThrough : null,
+                      decorationColor: todo.completed ? Colors.green : null,
+                      color: const Color(0xFF858585),
+                      fontFamily: 'consolas',
+                    ),
                   ),
                 ),
                 trailing: Row(
@@ -605,6 +621,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 Icons.done,
                                 color: Colors.green,
                               ),
+                              Icon(
+                                Icons.done,
+                                color: Colors.green,
+                              ),
                             ],
                           )
                         ],
@@ -613,20 +633,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     StyledDropdown(
                       value: todo.category,
                       items: [...categories],
-                      onChanged: (value) {
-                        setState(() {
-                          todo.category = value!;
-                          todo.lastEdited = DateTime.now();
-                          _saveTodos();
-                        });
-                      },
+                      onChanged: todo.completed
+                          ? null // Disable dropdown if completed
+                          : (value) {
+                              setState(() {
+                                todo.category = value!;
+                                todo.lastEdited = DateTime.now();
+                                _saveTodos();
+                              });
+                            },
                       hintText: 'Category',
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.edit),
-                      color: Colors.grey,
-                      onPressed: () => _editTodo(todo),
+                      color: todo.completed
+                          ? Colors.grey.withOpacity(0.5)
+                          : Colors.grey,
+                      onPressed: todo.completed ? null : () => _editTodo(todo),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
@@ -884,7 +908,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 class StyledDropdown extends StatelessWidget {
   final String value;
   final List<String> items;
-  final Function(String?) onChanged;
+  final Function(String?)? onChanged;
   final String hintText;
 
   const StyledDropdown({
@@ -897,9 +921,14 @@ class StyledDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDisabled = onChanged == null;
+
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFF858585)),
+        border: Border.all(
+            color: isDisabled
+                ? const Color(0xFF858585).withOpacity(0.5)
+                : const Color(0xFF858585)),
         borderRadius: BorderRadius.circular(4),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -909,14 +938,19 @@ class StyledDropdown extends StatelessWidget {
           value: value,
           hint: Text(hintText),
           dropdownColor: const Color(0xFF252526),
-          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF858585)),
+          icon: Icon(Icons.arrow_drop_down,
+              color: isDisabled
+                  ? const Color(0xFF858585).withOpacity(0.5)
+                  : const Color(0xFF858585)),
           items: items.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
               child: Text(
                 item == 'custom' ? '+ Custom' : item,
-                style: const TextStyle(
-                  color: Color(0xFFD4D4D4),
+                style: TextStyle(
+                  color: isDisabled
+                      ? const Color(0xFFD4D4D4).withOpacity(0.5)
+                      : const Color(0xFFD4D4D4),
                   fontFamily: 'consolas',
                 ),
               ),
