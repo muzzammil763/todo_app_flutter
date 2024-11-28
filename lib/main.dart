@@ -26,6 +26,7 @@ class Todo {
   String priority;
   bool completed;
   final DateTime timestamp;
+  DateTime? lastEdited; // Add this field
 
   Todo({
     required this.id,
@@ -34,6 +35,7 @@ class Todo {
     required this.priority,
     this.completed = false,
     required this.timestamp,
+    this.lastEdited,
   });
 
   Map<String, dynamic> toJson() => {
@@ -43,6 +45,7 @@ class Todo {
         'priority': priority,
         'completed': completed,
         'timestamp': timestamp.toIso8601String(),
+        'lastEdited': lastEdited?.toIso8601String(),
       };
 
   factory Todo.fromJson(Map<String, dynamic> json) => Todo(
@@ -52,7 +55,29 @@ class Todo {
         priority: json['priority'],
         completed: json['completed'],
         timestamp: DateTime.parse(json['timestamp']),
+        lastEdited: json['lastEdited'] != null
+            ? DateTime.parse(json['lastEdited'])
+            : null,
       );
+
+  String formatDateTime(DateTime dateTime) {
+    // String period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    int hour12 = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    hour12 = hour12 == 0 ? 12 : hour12;
+
+    return '${hour12.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')} '
+        '(${dateTime.day.toString().padLeft(2, '0')}-'
+        '${dateTime.month.toString().padLeft(2, '0')}-'
+        '${dateTime.year})';
+  }
+
+  String getFormattedTimestamp() {
+    String timeStr = formatDateTime(lastEdited ?? timestamp);
+    if (lastEdited != null) {
+      timeStr += ' // Edited';
+    }
+    return timeStr;
+  }
 }
 
 class HomePage extends StatefulWidget {
@@ -552,7 +577,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                 ),
                 subtitle: Text(
-                  '${todo.timestamp.toLocal()} | ',
+                  todo.getFormattedTimestamp(),
                   style: const TextStyle(
                     color: Color(0xFF858585),
                     fontFamily: 'consolas',
@@ -563,19 +588,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (todo.completed)
-                      const Text(
-                        "Marked As Completed",
-                        style: TextStyle(
-                          color: Color(0xFF4EC9B0),
-                          fontFamily: 'consolas',
-                        ),
+                      const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(height: 4),
+                          Text(
+                            "Marked As Completed",
+                            style: TextStyle(
+                              color: Color(0xFF4EC9B0),
+                              fontFamily: 'consolas',
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.done,
+                                color: Colors.green,
+                              ),
+                            ],
+                          )
+                        ],
                       ),
+                    const SizedBox(width: 24),
                     StyledDropdown(
                       value: todo.category,
                       items: [...categories],
                       onChanged: (value) {
                         setState(() {
                           todo.category = value!;
+                          todo.lastEdited = DateTime.now();
                           _saveTodos();
                         });
                       },
@@ -783,7 +824,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 StyledDropdown(
                   value: editPriority,
                   items: const ['low', 'medium', 'high', 'urgent'],
-                  onChanged: (value) => setState(() => editPriority = value!),
+                  onChanged: (value) => setState(
+                    () => editPriority = value!,
+                  ),
                   hintText: 'Priority',
                 ),
               ],
@@ -806,6 +849,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 todo.text = textController.text;
                 todo.category = editCategory;
                 todo.priority = editPriority;
+                todo.lastEdited = DateTime.now();
               });
               _saveTodos();
               Navigator.pop(context);
